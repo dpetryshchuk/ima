@@ -8,7 +8,7 @@
     </head>
     <!-- Body is the rendered content -->
     <body>
-        <a href="index.html">Home</a>
+        <a href="https://www.dmytropetryshchuk.com">Home</a>
         <h1>Ima</h1>
         <div id="conversation"></div>
         <textarea id="input" placeholder="Say something..."></textarea>
@@ -19,18 +19,41 @@
             const input = document.getElementById("input");
             const send = document.getElementById("send");
 
+            let history = JSON.parse(localStorage.getItem("ima-history")) || [];
+
+            history.forEach(message => {
+                const name = message.role === "user" ? "You" : "Ima";
+                conversation.innerHTML += `<p>${name}: ${message.content}</p>`;
+            });
+
             send.addEventListener('click', async () => {
                 const message = input.value;
                 if(!message) return;
                 
+                // Add user message to history
+                history.push({
+                    role: "user",
+                    content: message
+                });
+                localStorage.setItem("ima-history", JSON.stringify(history));
                 conversation.innerHTML += `<p>You: ${message}`;
                 input.value = '';
-                // encodeURIComponent makes the string url safe, spaces, special characters, etc
-                const response = await fetch('/chat?message=' + encodeURIComponent(message), {
-                    method: 'POST'
+
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: history })
                 });
                 const data = await response.json();
 
+
+                // Add response to history
+                history.push({
+                    role: "assistant",
+                    content: data.response
+                });
+                localStorage.setItem("ima-history", JSON.stringify(history));
+                
                 // Showing response
                 conversation.innerHTML += `<p>Ima: ${data.response}</p>`;
             })
