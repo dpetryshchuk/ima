@@ -26,7 +26,14 @@
                 conversation.innerHTML += `<p>${name}: ${message.content}</p>`;
             });
 
-            send.addEventListener('click', async () => {
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    send.click();
+                }
+            });
+
+            send.addEventListener('click', async (  ) => {
                 const message = input.value;
                 if(!message) return;
                 
