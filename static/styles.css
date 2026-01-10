@@ -1,0 +1,16 @@
+body {
+    background-color: #FAFAFA;
+    color: #1E1E1E;
+    font-family: "Georgia", serif;
+}
+
+a {
+    background-color: aquamarine;
+    color: #1E1E1E;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: honeydew;
+    color: #1E1E1E;
+}

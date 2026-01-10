@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- Head has metadata about the page -->
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="styles.css">
+        <title>Ima</title>
+    </head>
+    <!-- Body is the rendered content -->
+    <body>
+        <a href="index.html">Home</a>
+        <h1>Ima</h1>
+        <div id="conversation"></div>
+        <textarea id="input" placeholder="Say something..."></textarea>
+        <button id="send">Send</button>
+
+        <script>
+            const conversation = document.getElementById("conversation");
+            const input = document.getElementById("input");
+            const send = document.getElementById("send");
+
+            send.addEventListener('click', async () => {
+                const message = input.value;
+                if(!message) return;
+                
+                conversation.innerHTML += `<p>You: ${message}`;
+                input.value = '';
+                // encodeURIComponent makes the string url safe, spaces, special characters, etc
+                const response = await fetch('/chat?message=' + encodeURIComponent(message), {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                // Showing response
+                conversation.innerHTML += `<p>Ima: ${data.response}</p>`;
+            })
+        </script>
+    </body>
+</html>
