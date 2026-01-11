@@ -29,7 +29,8 @@ def add_message(session_id: str, role: str, content: str):
         db.add(conversation)
     else:
         # Append message to existing conversation
-        conversation.messages.append({"role": role, "content": content})
+        # We must re-assign the list to force SQLAlchemy to detect the change on JSONB
+        conversation.messages = conversation.messages + [{"role": role, "content": content}]
         conversation.updated_at = datetime.utcnow()
 
     db.commit()
