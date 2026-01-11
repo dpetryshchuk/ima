@@ -11,21 +11,35 @@
         <a href="https://www.dmytropetryshchuk.com">Home</a>
         <h1>Ima</h1>
         <div id="conversation"></div>
-        <textarea id="input" placeholder="Say something..."></textarea>
-        <button id="send">Send</button>
+        <div id="input-area">
+            <textarea id="input" placeholder="Say something..."></textarea>
+            <button id="send">Send</button>
+        </div>
 
         <script>
             const conversation = document.getElementById("conversation");
             const input = document.getElementById("input");
             const send = document.getElementById("send");
 
+            // Get or create session ID (unique per browser)
+            let sessionId = localStorage.getItem("ima-session-id");
+            if (!sessionId) {
+                sessionId = "session-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem("ima-session-id", sessionId);
+            }
+
             let history = JSON.parse(localStorage.getItem("ima-history")) || [];
 
+            // Display history in conversation div
             history.forEach(message => {
                 const name = message.role === "user" ? "You" : "Ima";
                 conversation.innerHTML += `<p>${name}: ${message.content}</p>`;
             });
 
+            // Auto-scroll to bottom after loading history
+            conversation.scrollTop = conversation.scrollHeight;
+
+            // If you press enter when input is selected, it clicks the send button.
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
@@ -33,36 +47,48 @@
                 }
             });
 
-            send.addEventListener('click', async (  ) => {
+            // Main click send button behavior
+            send.addEventListener('click', async () => {
                 const message = input.value;
                 if(!message) return;
-                
-                // Add user message to history
+
+                // Add user message to history variable for display
                 history.push({
                     role: "user",
                     content: message
                 });
+
+                // Save to localStorage for display persistence
                 localStorage.setItem("ima-history", JSON.stringify(history));
-                conversation.innerHTML += `<p>You: ${message}`;
+
+                // Show user message immediately
+                conversation.innerHTML += `<p>You: ${message}</p>`;
+                conversation.scrollTop = conversation.scrollHeight; // Auto-scroll
                 input.value = '';
 
+                // Send only session_id and new message to backend
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: history })
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
                 });
+
+                // Get AI response
                 const data = await response.json();
 
-
-                // Add response to history
+                // Add AI response to history for display
                 history.push({
                     role: "assistant",
                     content: data.response
                 });
                 localStorage.setItem("ima-history", JSON.stringify(history));
-                
-                // Showing response
+
+                // Show AI response
                 conversation.innerHTML += `<p>Ima: ${data.response}</p>`;
+                conversation.scrollTop = conversation.scrollHeight; // Auto-scroll
             })
         </script>
     </body>
