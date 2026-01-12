@@ -8,7 +8,10 @@
     </head>
     <!-- Body is the rendered content -->
     <body>
-        <a href="https://www.dmytropetryshchuk.com">Home</a>
+        <nav>
+            <a href="https://www.dmytropetryshchuk.com">Home</a>
+            <a href="backstory.html">Backstory</a>
+        </nav>
         <h1>Ima</h1>
         <div id="conversation"></div>
         <div id="input-area">
@@ -21,6 +24,7 @@
             const input = document.getElementById("input");
             const send = document.getElementById("send");
 
+            // TODO: Switch this to a cookie
             // Get or create session ID (unique per browser)
             let sessionId = localStorage.getItem("ima-session-id");
             if (!sessionId) {
@@ -28,16 +32,16 @@
                 localStorage.setItem("ima-session-id", sessionId);
             }
 
-            let history = JSON.parse(localStorage.getItem("ima-history")) || [];
-
-            // Display history in conversation div
-            history.forEach(message => {
-                const name = message.role === "user" ? "You" : "Ima";
-                conversation.innerHTML += `<p>${name}: ${message.content}</p>`;
-            });
-
-            // Auto-scroll to bottom after loading history
-            conversation.scrollTop = conversation.scrollHeight;
+            (async function() {
+                const response = await fetch(`/history/${sessionId}`);
+                const history = await response.json();
+                
+                history.forEach(msg => {
+                    const name = msg.role === "user" ? "You" : "Ima";
+                    conversation.innerHTML += `<p>${name}: ${msg.content}</p>`;
+                });
+                conversation.scrollTop = conversation.scrollHeight;
+            })();
 
             // If you press enter when input is selected, it clicks the send button.
             input.addEventListener('keydown', (event) => {
@@ -51,15 +55,6 @@
             send.addEventListener('click', async () => {
                 const message = input.value;
                 if(!message) return;
-
-                // Add user message to history variable for display
-                history.push({
-                    role: "user",
-                    content: message
-                });
-
-                // Save to localStorage for display persistence
-                localStorage.setItem("ima-history", JSON.stringify(history));
 
                 // Show user message immediately
                 conversation.innerHTML += `<p>You: ${message}</p>`;
@@ -78,13 +73,6 @@
 
                 // Get AI response
                 const data = await response.json();
-
-                // Add AI response to history for display
-                history.push({
-                    role: "assistant",
-                    content: data.response
-                });
-                localStorage.setItem("ima-history", JSON.stringify(history));
 
                 // Show AI response
                 conversation.innerHTML += `<p>Ima: ${data.response}</p>`;
